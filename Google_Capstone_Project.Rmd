@@ -1,0 +1,290 @@
+---
+title: "Google Data Analytics Professional Certificate Capstone Project"
+author: "Caleb Koresh"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+For my data analytics capstone project, I have selected to complete the Bellabeat product analysis case study. Bellabeat is a technology manufacturer of women's health and fitness products. I will be placing myself in the shoes of a junior data analyst on their marketing analytics team. I will be following the data analytics process outlined in the course:
+
+1.  **Ask**
+
+2.  **Prepare**
+
+3.  **Process**
+
+4.  **Analyze**
+
+5.  **Share**
+
+6.  **Act**
+
+## Background
+
+The founders of Bellabeat, Srsen and Mur are motivated by their goal of providing quality products that empower and motivate women by providing information about their activity, sleep, stress, and reproductive health. Their products are available from various online retailers as well as their website. Their advertising strategy focuses on digital advertising such as Google and major social media networks.
+
+In this hypothetical scenario, I have been instructed to analyze available data in order to find insights into how potential customers use their smart technology on a daily basis. Based on the analysis, I must deliver a high-level recommendation on how to adjust their marketing strategy to accommodate the new information and optimize their advertising for one of the current Bellabeat products.
+
+## 1) Ask
+
+#### Identify the Business Task:
+
+Deliver an updated marketing strategy for one of the Bellabeat products based on the results of the data analysis on non-Bellabeat products.
+
+#### Consider Key Stakeholders:
+
+**Urska Srsen:** Cofounder and Chief Creative Officer of Bellabeat
+
+**Sando Mur:** Cofounder and key member of the Bellabeat executive team
+
+Srsen and Mur's company has experienced rapid growth since its founding and has grown into a global company. They hope to use data insights to continue this growth and reach more customers.
+
+#### Key Questions:
+
+1.  What are some trends in smart device usage?
+
+2.  How could these trends apply to Bellabeat customers?
+
+3.  How could these trends help influence Bellabeat marketing strategy?
+
+## 2) Prepare
+
+My hypothetical supervisor has directed me to a publicly available data set that was linked below:
+
+<https://www.kaggle.com/datasets/arashnic/fitbit>
+
+The data was gathered from thirty fitbit users between 3/12/2016 and 5/12/2016 and contains various different statistics such as daily activity, steps, and heart rate. The data is slightly outdated but smart technology has not changed substantially since the data was collected. Another consideration that must be made before formulating any concrete conclusions is the relatively small data size and the survey method. The data was collected through Amazon Mechanical Turk and may not be representative of all smart technology users.
+
+## 3) Process
+
+#### Load Packages
+
+```{r echo=T, message=FALSE, warning=FALSE, results='hide'}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(lubridate)
+```
+
+#### Load Data
+
+I chose to examine the daily and hourly data to find more general trends in everyday usage, in order to find potential value that Bellabeat could include in their marketing strategy. Unfortunately the weight data set only contained eight participants so no conclusions could be drawn and the data was not included.
+
+```{r echo=T, message=FALSE, warning=FALSE, results='hide'}
+daily_activity <- read_csv("Fitabase Data 4.12.16-5.12.16/dailyActivity_merged.csv")
+hourly_calories <- read_csv("Fitabase Data 4.12.16-5.12.16/hourlyCalories_merged.csv")
+hourly_intensities <- read_csv("Fitabase Data 4.12.16-5.12.16/hourlyIntensities_merged.csv")
+hourly_steps <- read_csv("Fitabase Data 4.12.16-5.12.16/hourlySteps_merged.csv")
+sleep <- read_csv("Fitabase Data 4.12.16-5.12.16/sleepDay_merged.csv")
+```
+
+#### Preview Data
+
+```{r}
+head(daily_activity)
+head(hourly_calories)
+head(hourly_intensities)
+head(hourly_steps)
+head(sleep)
+```
+
+#### Adjust Date and Time Formats
+
+Making the date and time formats consistent throughout the data will make the analysis much simpler.
+
+```{r echo=T, message=FALSE, warning=FALSE, results='hide'}
+daily_activity$ActivityDate <- mdy(daily_activity$ActivityDate)
+hourly_calories$ActivityHour <- as_datetime(hourly_calories$ActivityHour, format = "%m/%d/%Y %I:%M:%S %p")
+hourly_intensities$ActivityHour <- as_datetime(hourly_intensities$ActivityHour, format = "%m/%d/%Y %I:%M:%S %p")
+hourly_steps$ActivityHour <- as_datetime(hourly_steps$ActivityHour, format = "%m/%d/%Y %I:%M:%S %p")
+sleep$SleepDay <- as_datetime(sleep$SleepDay, format = "%m/%d/%Y %I:%M:%S %p")
+```
+
+#### Remove Duplicates and Missing Data
+
+```{r echo=T, message=FALSE, warning=FALSE, results='hide'}
+#Daily Activity
+daily_activity <- daily_activity %>% 
+  distinct() %>%
+  drop_na()
+
+#Hourly Calories
+hourly_calories <- hourly_calories %>% 
+  distinct() %>%
+  drop_na()
+
+#Hourly Intensities 
+hourly_intensities <- hourly_intensities %>% 
+  distinct() %>%
+  drop_na()
+
+#Hourly Steps
+hourly_steps <- hourly_steps %>% 
+  distinct() %>%
+  drop_na()
+```
+
+#### Summarize Data
+
+I began by looking at some basic statistics within the data in hopes of finding potential areas of value that Bellabeat could deliver to the customer.
+
+##### Daily Activity
+
+```{r}
+daily_activity %>% 
+  select(TotalSteps, 
+         TotalDistance) %>%
+  summary()
+
+daily_activity %>% 
+  select(VeryActiveDistance, 
+         ModeratelyActiveDistance,
+         LightActiveDistance) %>%
+  summary()
+
+daily_activity %>%
+  select(VeryActiveMinutes,
+         FairlyActiveMinutes,
+         LightlyActiveMinutes,
+         SedentaryMinutes)%>%
+  summary()
+
+daily_activity %>%
+  select(Calories)%>%
+  summary()
+```
+
+##### Hourly Calories
+
+```{r}
+hourly_calories %>%
+  select(Calories)%>%
+  summary()
+
+```
+
+##### Hourly Intensity
+
+```{r}
+hourly_intensities %>%
+  select(TotalIntensity,
+         AverageIntensity) %>%
+  summary()
+
+```
+
+##### Hourly Steps
+
+```{r}
+hourly_steps %>%
+  select(StepTotal) %>%
+  summary()
+
+```
+
+##### Sleep
+
+```{r}
+sleep %>%
+  select(TotalMinutesAsleep,
+         TotalTimeInBed)%>%
+  summary()
+```
+
+I gathered two interesting insights from these summaries. I noticed a substantial difference between the median and mean time asleep compared to the time spent in bed. I also saw that the median and mean daily steps were well below the advisable amount for general health. Consequently, I will be analyzing these differences in the next section.
+
+#### Merge Data into Daily and Hourly
+
+Merging the data into two different tables will simplify the analysis process.
+
+```{r echo=T, message=FALSE, warning=FALSE, results='hide'}
+#Make compatible 
+colnames(sleep)[2] <- "ActivityDate" 
+
+
+#Merge Data
+daily <- merge(daily_activity, sleep, by = c("Id", "ActivityDate"))
+hourly <- merge(hourly_calories, hourly_intensities, by = c("Id", "ActivityHour"))
+hourly <- merge(hourly, hourly_steps, by = c("Id", "ActivityHour"))
+head(hourly)
+```
+
+## 4) Analyze
+
+### Sleep
+
+In order to expand on the current marketing strategy I will attempt to find potential value that Bellabeat can offer customers. The reason I chose to analyze time in bed and time asleep was the potential for diagnosing insomnia or identifying poor sleeping habits. Healthy people should be able to fall asleep in 10-20 minutes and taking longer than 30 has shown to decrease sleep quality (<https://www.healthline.com/health/healthy-sleep/how-long-does-it-take-to-fall-asleep#normal-sleep>).
+
+```{r}
+sleep_data <- daily %>%
+  group_by(Id) %>%
+  summarise(mean_time_in_bed = mean(TotalTimeInBed), mean_time_asleep = mean(TotalMinutesAsleep))
+
+sleep_data <- sleep_data %>%
+  mutate(potential_insomnia = case_when(
+    (mean_time_in_bed - mean_time_asleep) >= 30 ~ "Yes",
+    (mean_time_in_bed - mean_time_asleep) < 30 ~ "No"
+  ))
+
+sleep_data %>%
+  count(potential_insomnia)
+
+```
+
+![**Proportion of Users with Poor Sleeping Habits**](ConfidenceInterval.png)
+
+(<https://artofstat.com/web-apps>)
+
+Simple statistical analysis through Art of Stat revealed that the 95% confidence interval of the population proportion of fitbit users who have poor sleeping habits is [0.2194, 0.6139]. In other words, there is a 95% chance that the population proportion is between 0.2194 and 0.6139. This indicates that a large proportion of consumers can benefit from Bellabeat sleep tracking data.
+
+### Steps
+
+The CDC recommends 10000 steps per day for maintaining general health so it is worth investigating if users are meeting these goals. If they are consistently failing to reach this goal then using Bellabeat's step tracking data can empower users to improve their overall well-being. (<https://www.cdc.gov/diabetes/prevention/pdf/postcurriculum_session8.pdf>)
+
+```{r}
+step_data <- daily %>%
+  group_by(Id) %>%
+  summarise(mean_daily_steps = mean(TotalSteps))
+
+step_data <- step_data %>%
+  mutate(adequate_steps = case_when(
+    mean_daily_steps >= 10000 ~ "Yes",
+    mean_daily_steps < 10000 ~ "No"
+  ))
+
+step_data %>%
+  count(adequate_steps)
+```
+
+![**Proportion of Users Who Average 10000 Steps Per Day**](ConfidenceInterval.png)
+
+(<https://artofstat.com/web-apps>)
+
+The 95% confidence interval for the population proportion of fitbit users who reach the reccomended 10000 steps per day is [0.04586, 0.3708]. This interval indicates that most users fail to reach this goal. These users could greatly benefit in overall well-being if Bellabeat were to provide them with the necessary data and reminders to reach this goal on a daily basis.
+
+## 5) Share
+
+The trend between time in bed and time asleep is clearly going to be linear but the outliers from the line can be insightful. A large gap away from the expected line can be an indication of insomnia or poor sleeping habits.
+
+```{r}
+ggplot(data = daily, aes(x = TotalTimeInBed, y = TotalMinutesAsleep)) +
+  geom_point() +
+  labs(title = "Time in Bed Vs Time Asleep")
+```
+
+## 6) Act
+
+After analyzing the data, two key insights were revealed that could be used to adjust Bellabeats marketing strategy. The data set was not large enough to make concrete conclusions, but was more oriented towards practicing key data manipulation skills. Despite this, analyzing the data and using this information to find new ways to use smart technology can be beneficial to their marketing strategy. Bellabeat is focused on empowering women through data and these insights can be used to do just that.
+
+1.  A large portion of smart technology users may have poor sleeping habits and potentially even insomnia. Sleep quality diminishes when time to fall asleep exceeds thirty minutes so it is important to be aware of this data. Bellabeat can emphasize that their products keep track of this data and more features can be implemented to help educate and remind people about healthy sleeping habits, or even advise consulting a doctor about insomnia. This adds value to their products while differentiating themselves from other smart technology.
+
+2.  More than half of the users in the study were not meeting CDC recommendations regarding taking 10000 steps per day. Being sedentary is a serious detriment to ones health and Bellabeats products are designed to help people stay on top of their daily activity. Revolving most of their marketing around these concepts is crucial to demonstrating the value that these products have for improving personal health.
